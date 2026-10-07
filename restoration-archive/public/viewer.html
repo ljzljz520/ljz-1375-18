@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>修复对照 · 访客视图</title><link rel="stylesheet" href="/css/app.css"></head>
+<body>
+<header><h1>已批准的修复对照（不可变版本）</h1><a href="/editor.html">编辑台</a></header>
+<div class="wrap">
+  <div id="meta" class="card"></div>
+  <div id="pairs"></div>
+</div>
+<script src="/js/viewer.js"></script>
+<script src="/js/compare.js"></script>
+<script>
+(async()=>{
+  const m=location.hash.match(/#\/v\/([\w]+)/);
+  if(!m){document.querySelector('#meta').innerHTML='<div class="banner">请使用已批准版本的深链接（#/v/…）。</div>';return;}
+  const res=await fetch('/api/versions/'+m[1]);
+  if(!res.ok){document.querySelector('#meta').innerHTML='<div class="banner bad">版本不存在或未批准。</div>';return;}
+  const v=await res.json();
+  const M=v.manifest;
+  if(!v.approval){document.querySelector('#meta').innerHTML='<div class="banner bad">该版本尚未批准，访客不可见。</div>';return;}
+  document.querySelector('#meta').innerHTML=`<h2>${M.groupId}</h2>
+    <div class="kv">版本 v${M.verNo} · 生成于 ${M.generatedAt}
+      · 批准人 <b>${v.approval.approver}</b>：${v.approval.note||'（无说明）'}
+      <br>清单指纹：照片修订 sha256 固定在本版本内；滑块、并排与注释引用同一组照片版本。</div>`;
+  const layerState={baseline:true,restoration:true,anchors:true};
+  for(const pe of M.pairs){
+    const card=document.createElement('div');card.className='card';
+    card.innerHTML=`<h2>${pe.title||''}</h2>
+      <div class="pillbar"><span class="tag ${pe.view.mode==='overlay_slider'?'ok':'warn'}">${pe.view.mode==='overlay_slider'?'滑块叠加（仿射，误差门内）':'并排观察（'+pe.view.reason+'）'}</span>
+      ${pe.registration&&pe.registration.maxErrorPx!=null?`<span class="muted">RMSE ${pe.registration.rmsePx}px / 最大 ${pe.registration.maxErrorPx}px / 界限 ${pe.registration.tolerancePx}px</span>`:''}</div>
+      <div class="vcmp"></div>`;
+    document.querySelector('#pairs').appendChild(card);
+    try{ await renderComparison({host:card.querySelector('.vcmp'),pairEntry:pe,
+      photosById:{},annotations:M.annotations,layerState}); }
+    catch(e){ card.querySelector('.vcmp').innerHTML='<div class="banner bad">该版本瓦片缺失（版本照片文件未随档保存）。</div>'; }
+  }
+})();
+</script>
+</body></html>

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>古建筑修复对照档案 · 编辑台</title>
+<link rel="stylesheet" href="/css/app.css"></head>
+<body>
+<header><h1>古建筑修复对照档案 · 编辑台</h1>
+<a href="/">← 返回首页</a><a href="/viewer.html" target="_blank">访客视图</a></header>
+<div class="wrap">
+  <div id="groups" class="card">
+    <h2>档案组</h2>
+    <div class="row">
+      <label>名称<input id="gTitle" placeholder="如：某阁修缮对照"></label>
+      <label>建筑<input id="gBuilding"></label>
+      <button id="newGroup">建档</button>
+    </div>
+    <div id="groupList" style="margin-top:10px"></div>
+  </div>
+
+  <div id="workspace" style="display:none">
+    <div class="card">
+      <h2 id="gTitle2"></h2>
+      <div class="row">
+        <label>阶段名<input id="stName"></label>
+        <label>年份<input id="stYear" type="number" style="width:90px"></label>
+        <button id="addStage" class="ghost">加阶段</button>
+      </div>
+      <div id="stageList" class="kv" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <h2>上传照片与摄影条件</h2>
+      <div class="row">
+        <label>文件<input type="file" id="upFile" accept="image/*"></label>
+        <label>视点<select id="upSide"><option value="before">修缮前</option><option value="after">修缮后</option></select></label>
+        <label>相机/镜头<input id="upCamera" placeholder="Sony A7 / 35mm"></label>
+        <label>光照天气<input id="upLight" placeholder="上午侧光/晴"></label>
+        <label>授权方<input id="upLicense"></label>
+        <label>授权到期<input id="upExpires" type="date"></label>
+        <button id="uploadBtn">上传</button>
+      </div>
+      <div id="photoList" class="kv" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <h2>照片对</h2>
+      <div class="row">
+        <label>标题<input id="pairTitle"></label>
+        <label>前<select id="pairB"></select></label>
+        <label>后<select id="pairA"></select></label>
+        <button id="newPair">建对</button>
+        <button id="pairLate" class="ghost" title="模拟验收一侧资源晚到">仅以前侧建对（晚到挂接）</button>
+      </div>
+      <div id="pairList" style="margin-top:10px"></div>
+    </div>
+
+    <div id="pairEditor" class="card" style="display:none">
+      <h2 id="peTitle"></h2>
+      <div id="peBanners"></div>
+
+      <div class="row" style="margin:6px 0">
+        <button id="btnAffine">仿射配准（误差门 3px）</button>
+        <label>门限px<input id="tol" type="number" value="3" style="width:70px"></label>
+        <button id="btnManual" class="ghost">人工对应点映射</button>
+        <button id="btnTiles" class="ghost">服务端生成大图瓦片</button>
+        <button id="btnPoly" class="ghost">圈定“修复新增部分”</button>
+        <button id="btnRestricted" class="ghost">未开放区域说明（持久）</button>
+      </div>
+
+      <div class="pair-grid">
+        <div class="cmp"><div class="muted">修缮前（点击放置/选择左锚点）</div>
+          <canvas id="cvB" width="560" height="420"></canvas></div>
+        <div class="cmp"><div class="muted">修缮后（点击放置/选择右锚点）</div>
+          <canvas id="cvA" width="560" height="420"></canvas></div>
+      </div>
+      <div class="muted">在两侧依次点击同一实物点建立对应；黄点=有效锚点，红点=待复核。两编辑同时修改同一锚点时后提交方收到 409。</div>
+
+      <div style="margin-top:10px">
+        <h2 style="font-size:14px">锚点</h2>
+        <table id="anchorTable"><thead><tr>
+          <th>标签</th><th>左(x,y)</th><th>右(x,y)</th><th>状态</th><th>版本</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+
+      <div class="card" style="margin-top:12px;background:#fbf7ee">
+        <h2>原图裁切 / 方向变化（明确声明，坐标将迁移）</h2>
+        <div class="row">
+          <select id="geoSide"><option value="before">作用于修缮前</option><option value="after">作用于修缮后</option></select>
+          <select id="geoOp">
+            <option value="rotate90cw">顺时针 90°</option>
+            <option value="rotate180">180°</option>
+            <option value="rotate270cw">逆时针 90°</option>
+            <option value="flip_h">水平翻转</option>
+            <option value="flip_v">垂直翻转</option>
+            <option value="crop">裁切（居中 60%）</option>
+          </select>
+          <button id="btnGeo" class="ghost">应用并迁移标注</button>
+          <span class="muted">未声明的直接换片（含图像翻转）→ 全部锚点进入待复核</span>
+          <input type="file" id="replaceFile" accept="image/*">
+          <button id="btnReplace" class="ghost">未声明替换该侧照片</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px;background:#fbf7ee">
+        <h2>版本与批准</h2>
+        <div class="row">
+          <label>提交备注<input id="commitNote" placeholder="本版摄影条件/修复阶段说明"></label>
+          <button id="btnCommit">提交不可变版本</button>
+          <label>批准人<input id="approver" placeholder="姓名"></label>
+          <label>批准说明<input id="approvalNote"></label>
+          <button id="btnApprove">批准最新版本</button>
+        </div>
+        <div id="versionList" class="kv" style="margin-top:8px"></div>
+        <div class="muted">滑块、并排与文字注释都引用同一版本清单；访客深链接复现已批准比较。</div>
+      </div>
+
+      <div id="viewerHost" style="margin-top:12px"></div>
+    </div>
+  </div>
+</div>
+<dialog id="dlg"><form method="dialog" id="dlgForm">
+  <p id="dlgText" style="font-size:13px"></p>
+  <input type="hidden" id="dlgVal">
+  <button value="ok">确定</button>
+</form></dialog>
+<script src="/js/editor.js"></script>
+</body></html>

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>古建筑修复对照档案</title><link rel="stylesheet" href="/css/app.css"></head>
+<body>
+<header><h1>古建筑修复对照档案</h1></header>
+<div class="wrap">
+  <div class="card">
+    <h2>这是什么</h2>
+    <p class="kv">用于管理修缮前后照片对、修复阶段与同名实物锚点。服务端生成大图瓦片；数据库保存
+      <b>摄影条件、对齐变换与批准说明</b>。</p>
+    <ul class="kv">
+      <li>不同视点照片不会仅靠拉到相同宽高就宣称可比：必须通过<b>配准模型与误差界限</b>检验，缺基准点时退回<b>并排观察</b>。</li>
+      <li>比较<b>仿射配准</b>与<b>人工对应点映射</b>；透视、遮挡、结构变化的限制在视图内明示。</li>
+      <li>修复后的新增结构用多边形排除，<b>不会被扭曲成旧结构</b>。</li>
+      <li>原图裁切或方向变化后，标注坐标经<b>明确变换迁移</b>；未声明或越界则进入<b>待复核</b>。</li>
+      <li>滑块、并排与文字注释引用<b>同一照片组版本</b>；访客深链接复现已批准比较。</li>
+      <li>未开放区域说明为<b>持久注释</b>，不随图层切换消失。</li>
+      <li>服务器限制超大解码任务资源；瓦片生成途中换片自动作废。</li>
+    </ul>
+    <p><a href="/editor.html"><button>进入编辑台</button></a>
+       <a href="/viewer.html"><button class="ghost">访客视图</button></a></p>
+  </div>
+</div></body></html>

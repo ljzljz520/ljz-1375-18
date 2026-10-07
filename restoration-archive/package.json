@@ -1,0 +1,15 @@
+{
+  "name": "restoration-archive",
+  "version": "1.0.0",
+  "description": "古建筑修复对照档案：照片对/阶段/锚点编辑、服务端瓦片、配准模型与误差界限",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server/server.js",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "sharp": "^0.33.0",
+    "sql.js": "^1.12.0"
+  }
+}
