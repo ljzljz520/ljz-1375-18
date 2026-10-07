@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>古建筑修复对照档案</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="seal">档</span>
+    <div>
+      <h1>古建筑修复对照档案</h1>
+      <p class="sub">照片对 · 阶段 · 结构锚点 · 配准误差界限 · 批准快照</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button id="btnSeed" class="btn">载入演示工程</button>
+    <select id="pairSelect" class="select" hidden></select>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- 左：检视区 -->
+  <section class="viewer-col">
+    <div class="version-bar">
+      <div class="group-version">
+        照片组版本：<strong id="gvLabel">—</strong>
+        <span id="gvStatus" class="badge">—</span>
+        <span id="gvStage" class="badge stage"></span>
+      </div>
+      <div class="mode-switch">
+        <button data-mode="slider" class="btn seg active">滑杆</button>
+        <button data-mode="side" class="btn seg">并排</button>
+      </div>
+      <div class="layers">
+        <label><input type="checkbox" id="layerOld" checked> 旧照</label>
+        <label><input type="checkbox" id="layerNew" checked> 新照</label>
+        <label><input type="checkbox" id="layerAdded" checked> 新增构件</label>
+        <label><input type="checkbox" id="layerNotes" checked> 注释</label>
+      </div>
+      <button id="btnCopyLink" class="btn ghost">复制深链接</button>
+    </div>
+
+    <div id="viewer" class="viewer mode-slider">
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="cv" width="720" height="540"></canvas>
+        <div class="slider-bar" id="sliderBar">
+          <input type="range" id="splitRange" min="0" max="100" value="50" />
+          <div class="slider-label">拖动对比旧照 / 新照（同一照片组版本）</div>
+        </div>
+        <div class="license-flag old" id="flagOld" hidden>旧照授权已过期</div>
+        <div class="license-flag new" id="flagNew" hidden>新照授权已过期</div>
+        <div class="tile-status" id="tileStatus"></div>
+      </div>
+      <p class="reg-banner" id="regBanner">尚未配准：默认并排观察，不宣称几何可比。</p>
+    </div>
+
+    <!-- 常驻：未开放区域说明（任何图层切换都不消失）-->
+    <div class="restricted-panel" id="restrictedPanel" hidden>
+      <h4>⛔ 未开放区域常驻说明</h4>
+      <ul id="restrictedList"></ul>
+    </div>
+
+    <!-- 注释列表（与图像同一版本）-->
+    <div class="notes-panel">
+      <h4>文字注释 <small id="notesVersionTag"></small></h4>
+      <ul id="notesList" class="notes-list"></ul>
+      <div class="note-add">
+        <input type="text" id="noteText" placeholder="添加注释（可勾选为“未开放区域常驻说明”）" />
+        <label class="pin"><input type="checkbox" id="notePinned" />常驻受限</label>
+        <button id="btnAddNote" class="btn">添加</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 右：编辑/配准面板 -->
+  <aside class="side-col">
+    <div class="card">
+      <h3>阶段</h3>
+      <div class="stage-row">
+        <button data-stage="BEFORE" class="btn seg">残损前/旧照</button>
+        <button data-stage="WORKS" class="btn seg">施工中</button>
+        <button data-stage="AFTER" class="btn seg">修复后</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>结构锚点</h3>
+      <p class="hint">在旧照与新照上点选同一结构位置（柱顶、檐角等）。新增构件/遮挡处不要放对应点。</p>
+      <ul id="anchorList" class="anchor-list"></ul>
+      <div class="row">
+        <input type="text" id="anchorLabel" placeholder="锚点名（如 西檐角）" />
+        <button id="btnPickOld" class="btn">旧照取点</button>
+        <button id="btnPickNew" class="btn">新照取点</button>
+      </div>
+      <div class="row">
+        <button id="btnSaveAnchor" class="btn primary">保存锚点</button>
+        <span id="pickHint" class="pick-hint"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>配准模型与误差界限</h3>
+      <label class="row">模型
+        <select id="regKind" class="select">
+          <option value="affine">仿射（M2，≥3 非共线点）</option>
+          <option value="similarity">相似（M1，≥2 点）</option>
+          <option value="tps">人工对应点 TPS（M3，≥6 点）</option>
+        </select>
+      </label>
+      <div class="row">
+        <button id="btnPreviewReg" class="btn">试算</button>
+        <button id="btnSaveReg" class="btn primary">保存配准</button>
+      </div>
+      <div id="regResult" class="reg-result">尚未计算。</div>
+      <p class="hint" id="modelLimits">
+        阈值：相对均方根 ≤ 0.5%、相对最大误差 ≤ 1.5%、残差无空间聚集；
+        仅在控制点凸包内声明有效。不达标强制退回并排。
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>遮罩（不参与配准）</h3>
+      <div class="row">
+        <button id="btnMaskAdded" class="btn">框选“新增构件”</button>
+        <button id="btnMaskOcc" class="btn">框选“遮挡”</button>
+      </div>
+      <p class="hint">新增构件只标记、不变形；绝不把修复新增部分扭曲成旧结构。</p>
+    </div>
+
+    <div class="card">
+      <h3>图像变换 / 坐标迁移</h3>
+      <div class="row wrap">
+        <button id="btnRotate" class="btn">旋转90°(迁移标注)</button>
+        <button id="btnFlip" class="btn danger">模拟翻转(全部待复核)</button>
+        <button id="btnReplaceNew" class="btn">替换新照(晚到/换图)</button>
+        <button id="btnExpireOld" class="btn warn">旧照授权过期</button>
+      </div>
+      <p class="hint">裁切/方向变化后标注必须经明确变换迁移；无法唯一确定（翻转）则进入待复核。</p>
+    </div>
+
+    <div class="card">
+      <h3>服务端瓦片</h3>
+      <div class="row">
+        <button id="btnTiles" class="btn">生成大图瓦片</button>
+        <span id="tileMini" class="pick-hint"></span>
+      </div>
+    </div>
+
+    <div class="card approve-card">
+      <h3>验收批准</h3>
+      <ul id="blockerList" class="blockers"></ul>
+      <textarea id="approveNote" placeholder="批准说明（随不可变版本永久存档）" rows="2"></textarea>
+      <div class="row"><input id="reviewer" value="审查员·甲" /><button id="btnApprove" class="btn primary">批准此版本</button></div>
+    </div>
+
+    <div class="card">
+      <h3>版本 / 并发演示</h3>
+      <div id="versionList" class="version-list"></div>
+      <div class="row">
+        <button id="btnConflict" class="btn warn">模拟两编辑同改一锚点</button>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<div id="toast" class="toast" hidden></div>
+<script src="/js/app.js"></script>
+</body>
+</html>

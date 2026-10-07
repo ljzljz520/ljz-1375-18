@@ -1,0 +1,12 @@
+{
+  "name": "heritage-restore-archive",
+  "version": "1.0.0",
+  "description": "古建筑修复对照档案：照片对/阶段/锚点、配准模型与误差界限、服务端大图瓦片、批准快照",
+  "private": true,
+  "scripts": {
+    "start": "node server/server.js",
+    "test": "node server/test-integration.js"
+  },
+  "engines": { "node": ">=18" },
+  "license": "MIT"
+}

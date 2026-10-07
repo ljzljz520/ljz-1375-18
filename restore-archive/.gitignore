@@ -1,0 +1,10 @@
+# 运行期数据（保留示例图目录）
+data/db.json
+data/db.json.tmp
+data/.lock
+data/tiles/*/
+data/images/*.png
+!data/images/sample-old.png
+!data/images/sample-new.png
+node_modules/
+*.log
